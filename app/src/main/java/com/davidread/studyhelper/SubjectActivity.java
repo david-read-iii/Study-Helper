@@ -53,7 +53,7 @@ public class SubjectActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subject);
 
-        mStudyDb = StudyDatabase.getInstance();
+        mStudyDb = StudyDatabase.getInstance(getApplicationContext());
         mSubjectColors = getResources().getIntArray(R.array.subjectColors);
 
         mSubjectAdapter = new SubjectAdapter(loadSubjects());
@@ -72,7 +72,8 @@ public class SubjectActivity extends AppCompatActivity
     public void onSubjectEntered(String subjectText) {
         if (subjectText.length() > 0) {
             Subject subject = new Subject(subjectText);
-            mStudyDb.addSubject(subject);
+            long subjectId = mStudyDb.subjectDao().insertSubject(subject);
+            subject.setId(subjectId);
 
             // TODO: add subject to RecyclerView
             Toast.makeText(this, "Added " + subjectText, Toast.LENGTH_SHORT).show();
@@ -94,7 +95,7 @@ public class SubjectActivity extends AppCompatActivity
      * Returns the {@link List} of {@link Subject} objects stored in {@link #mStudyDb}.
      */
     private List<Subject> loadSubjects() {
-        return mStudyDb.getSubjects(StudyDatabase.SubjectSortOrder.UPDATE_DESC);
+        return mStudyDb.subjectDao().getSubjectsNewerFirst();
     }
 
     /**

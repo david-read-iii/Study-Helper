@@ -92,8 +92,8 @@ public class QuestionActivity extends AppCompatActivity {
         mSubjectId = intent.getLongExtra(EXTRA_SUBJECT_ID, 0);
 
         // Get all questions for this subject.
-        mStudyDb = StudyDatabase.getInstance();
-        mQuestionList = mStudyDb.getQuestions(mSubjectId);
+        mStudyDb = StudyDatabase.getInstance(getApplicationContext());
+        mQuestionList = mStudyDb.questionDao().getQuestions(mSubjectId);
 
         mQuestionText = findViewById(R.id.question_text_view);
         mAnswerLabel = findViewById(R.id.answer_label_text_view);
@@ -197,7 +197,7 @@ public class QuestionActivity extends AppCompatActivity {
      * Updates the app bar title to display the subject and number of questions.
      */
     private void updateAppBarTitle() {
-        Subject subject = mStudyDb.getSubject(mSubjectId);
+        Subject subject = mStudyDb.subjectDao().getSubject(mSubjectId);
         String title = getResources().getString(R.string.question_number,
                 subject.getText(), mCurrentQuestionIndex + 1, mQuestionList.size());
         setTitle(title);

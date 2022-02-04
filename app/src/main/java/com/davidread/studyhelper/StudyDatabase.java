@@ -1,146 +1,95 @@
 package com.davidread.studyhelper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import android.content.Context;
+
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 /**
- * {@link StudyDatabase} provides dummy {@link Subject} and {@link Question} objects. New objects
- * may be added, but they are not yet preserved in persistent storage.
+ * {@link StudyDatabase} defines this app's database configuration and serves as the main access
+ * point for manipulating persisted {@link Subject} and {@link Question} objects.
  */
-public class StudyDatabase {
+@Database(entities = {Question.class, Subject.class}, version = 1)
+public abstract class StudyDatabase extends RoomDatabase {
+
+    /**
+     * {@link String} file name of the database file.
+     */
+    private static final String DATABASE_NAME = "study.db";
 
     /**
      * Static reference of {@link StudyDatabase} to follow singleton pattern.
      */
-    private static StudyDatabase mStudyDb;
-
-    /**
-     * {@link List} of {@link Subject} objects in this dummy database.
-     */
-    private List<Subject> mSubjects;
-
-    /**
-     * {@link HashMap} mapping a subject id to a {@link List} of {@link Question} objects.
-     */
-    private HashMap<Long, List<Question>> mQuestions;
-
-    /**
-     * Enums used to specify how to sort {@link Subject} objects.
-     */
-    public enum SubjectSortOrder {ALPHABETIC, UPDATE_DESC, UPDATE_ASC}
+    private static StudyDatabase mStudyDatabase;
 
     /**
      * Returns an instance of {@link StudyDatabase}.
      *
      * @return An instance of {@link StudyDatabase}.
      */
-    public static StudyDatabase getInstance() {
-        if (mStudyDb == null) {
-            mStudyDb = new StudyDatabase();
+    public static StudyDatabase getInstance(Context context) {
+        if (mStudyDatabase == null) {
+            mStudyDatabase = Room.databaseBuilder(context, StudyDatabase.class, DATABASE_NAME)
+                    .allowMainThreadQueries()
+                    .build();
+            mStudyDatabase.addStarterData();
         }
-        return mStudyDb;
-    }
-
-    // Prevent instantiating from outside the class
-
-    /**
-     * Constructs a new {@link StudyDatabase} with dummy objects put into {@link #mSubjects} and
-     * {@link #mQuestions}. Is private to prevent instantiation outside of this class.
-     */
-    private StudyDatabase() {
-        mSubjects = new ArrayList<>();
-        mQuestions = new HashMap<>();
-
-        Subject subject = new Subject("Math");
-        subject.setId(1);
-        addSubject(subject);
-
-        Question question = new Question();
-        question.setId(1);
-        question.setText("What is 2 + 3?");
-        question.setAnswer("2 + 3 = 5");
-        question.setSubjectId(1);
-        addQuestion(question);
-
-        question = new Question();
-        question.setId(2);
-        question.setText("What is pi?");
-        question.setAnswer("Pi is the ratio of a circle's circumference to its diameter.");
-        question.setSubjectId(1);
-        addQuestion(question);
-
-        subject = new Subject("History");
-        subject.setId(2);
-        addSubject(subject);
-
-        question = new Question();
-        question.setId(3);
-        question.setText("On what date was the U.S. Declaration of Independence adopted?");
-        question.setAnswer("July 4, 1776.");
-        question.setSubjectId(2);
-        addQuestion(question);
-
-        subject = new Subject("Computing");
-        subject.setId(3);
-        addSubject(subject);
+        return mStudyDatabase;
     }
 
     /**
-     * Adds a new {@link Subject} to {@link #mSubjects}.
+     * {@link QuestionDao} instance for manipulating persisted {@link Question} objects.
      *
-     * @param subject {@link Subject} to add.
+     * @return A {@link QuestionDao} instance.
      */
-    public void addSubject(Subject subject) {
-        mSubjects.add(subject);
-        List<Question> questionList = new ArrayList<>();
-        mQuestions.put(subject.getId(), questionList);
-    }
+    public abstract QuestionDao questionDao();
 
     /**
-     * Returns a {@link Subject} from {@link #mSubjects} given its id.
+     * {@link SubjectDao} instance for manipulating persisted {@link Subject} objects.
      *
-     * @param subjectId Subject id to look for.
-     * @return {@link Subject} associated with the passed id.
+     * @return A {@link QuestionDao} instance.
      */
-    public Subject getSubject(long subjectId) {
-        for (Subject subject : mSubjects) {
-            if (subject.getId() == subjectId) {
-                return subject;
-            }
+    public abstract SubjectDao subjectDao();
+
+    /**
+     * Checks if the database is empty. If so, it initializes it with some dummy {@link Subject} and
+     * {@link Question} objects.
+     */
+    private void addStarterData() {
+
+        if (subjectDao().getSubjects().size() == 0) {
+
+            // Execute code on a background thread.
+            runInTransaction(() -> {
+
+                Subject subject = new Subject("Math");
+                long subjectId = subjectDao().insertSubject(subject);
+
+                Question question = new Question("What is 2 + 3?",
+                        "2 + 3 = 5",
+                        subjectId
+                );
+                questionDao().insertQuestion(question);
+
+                question = new Question("What is pi?",
+                        "Pi is the ratio of a circle's circumference to its diameter.",
+                        subjectId
+                );
+                questionDao().insertQuestion(question);
+
+                subject = new Subject("History");
+                subjectId = subjectDao().insertSubject(subject);
+
+                question = new Question("On what date was the U.S. Declaration of Independence adopted?",
+                        "July 4, 1776.",
+                        subjectId
+                );
+                questionDao().insertQuestion(question);
+
+                subject = new Subject("Computing");
+                subjectId = subjectDao().insertSubject(subject);
+            });
         }
-        return null;
-    }
-
-    /**
-     * Returns {@link #mSubjects}.
-     *
-     * @param order {@link SubjectSortOrder} specifying how to sort {@link #mSubjects}.
-     * @return {@link #mSubjects}.
-     */
-    public List<Subject> getSubjects(SubjectSortOrder order) {
-        return mSubjects;
-    }
-
-    /**
-     * Adds a new {@link Question} to {@link #mQuestions}.
-     *
-     * @param question {@link Question} to add.
-     */
-    public void addQuestion(Question question) {
-        List<Question> questionList = mQuestions.get(question.getSubjectId());
-        if (questionList != null) {
-            questionList.add(question);
-        }
-    }
-
-    /**
-     * Returns a {@link List} of {@link Question} objects given a subject id.
-     *
-     * @param subjectId Subject id to look for.
-     * @return A {@link List} of {@link Question} objects associated with the subject id.
-     */
-    public List<Question> getQuestions(long subjectId) {
-        return mQuestions.get(subjectId);
     }
 }
