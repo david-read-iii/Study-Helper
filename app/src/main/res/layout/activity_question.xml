@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Layout shown for QuestionActivity with no questions. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/no_question_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:context="com.davidread.studyhelper.QuestionActivity">
+
+        <!-- "No questions exist for this subject." TextView. -->
+        <TextView
+            android:id="@+id/no_question_label_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_questions"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toTopOf="@id/add_question_button"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <!-- "Add Question" Button. -->
+        <Button
+            android:id="@+id/add_question_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="addQuestionButtonClick"
+            android:text="@string/add_question"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Layout shown for QuestionActivity with questions. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/show_question_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        tools:context="com.davidread.studyhelper.QuestionActivity">
+
+        <!-- "Q" TextView. -->
+        <TextView
+            android:id="@+id/question_label_text_view"
+            style="@style/QALabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/question_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Question TextView. -->
+        <TextView
+            android:id="@+id/question_text_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toTopOf="@+id/answer_button"
+            app:layout_constraintLeft_toRightOf="@id/question_label_text_view"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@id/question_label_text_view"
+            tools:text="question" />
+
+        <!-- "Show Answer" Button. -->
+        <Button
+            android:id="@+id/answer_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:onClick="answerButtonClick"
+            android:text="@string/show_answer"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- "A" TextView. -->
+        <TextView
+            android:id="@+id/answer_label_text_view"
+            style="@style/QALabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/answer_label"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/answer_button" />
+
+        <!-- Answer TextView -->
+        <TextView
+            android:id="@+id/answer_text_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="20dp"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/answer_label_text_view"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@id/answer_label_text_view"
+            tools:text="answer" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>
