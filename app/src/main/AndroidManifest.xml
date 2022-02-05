@@ -15,6 +15,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -24,6 +25,11 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:parentActivityName=".SubjectActivity" />
+
+        <activity
+            android:name=".QuestionEditActivity"
+            android:exported="false"
+            android:parentActivityName=".QuestionActivity" />
 
     </application>
 

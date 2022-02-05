@@ -1,5 +1,6 @@
 package com.davidread.studyhelper;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -9,14 +10,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 
 /**
- * {@link QuestionActivity} provides a user interface for seeing a question-answer combo.
+ * {@link QuestionActivity} provides a user interface for browsing the questions associated with
+ * the selected subject. {@link #mAnswerButton} toggles the visibility of the question's answer.
+ * Previous and next app bar buttons show the previous and next question in the set. Add, edit, and
+ * delete overflow app bar buttons allow modification of the question set.
  */
 public class QuestionActivity extends AppCompatActivity {
 
@@ -26,8 +37,8 @@ public class QuestionActivity extends AppCompatActivity {
     public static final String EXTRA_SUBJECT_ID = "com.davidread.studyhelper.subject_id";
 
     /**
-     * {@link StudyDatabase} to get and put {@link Question} objects for whatever subject id is
-     * passed to this activity.
+     * {@link StudyDatabase} to get and put persisted {@link Question} objects for whatever subject
+     * id is passed to this activity.
      */
     private StudyDatabase mStudyDb;
 
@@ -40,6 +51,12 @@ public class QuestionActivity extends AppCompatActivity {
      * {@link List} of {@link Question} objects to display in this activity.
      */
     private List<Question> mQuestionList;
+
+    /**
+     * {@link Question} most recently deleted using {@link #deleteQuestion()}. Saved so deletes
+     * can be undone.
+     */
+    private Question mDeletedQuestion;
 
     /**
      * {@link TextView} for the answer label.
@@ -203,16 +220,128 @@ public class QuestionActivity extends AppCompatActivity {
         setTitle(title);
     }
 
+    /**
+     * Invoked when the "Add" app bar button is clicked. It starts {@link QuestionEditActivity}
+     * while passing {@link #mSubjectId} to it.
+     */
     private void addQuestion() {
-        // TODO: Add question
+        Intent intent = new Intent(this, QuestionEditActivity.class);
+        intent.putExtra(QuestionEditActivity.EXTRA_SUBJECT_ID, mSubjectId);
+        mAddQuestionResultLauncher.launch(intent);
     }
 
+    /**
+     * {@link ActivityResultLauncher} used to specify what actions to take after
+     * {@link QuestionEditActivity} finishes when it is launched using {@link #addQuestion()}. It
+     * gets attributes of the newly inserted {@link Question} from {@link #mStudyDb} and inserts
+     * it into {@link #mQuestionList}.
+     */
+    private final ActivityResultLauncher<Intent> mAddQuestionResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            long questionId = data.getLongExtra(QuestionEditActivity.EXTRA_QUESTION_ID, -1);
+                            Question newQuestion = mStudyDb.questionDao().getQuestion(questionId);
+
+                            // Add newly created question to the question list and show it.
+                            mQuestionList.add(newQuestion);
+                            showQuestion(mQuestionList.size() - 1);
+
+                            // Change layout in case this is the first question.
+                            displayQuestion(true);
+
+                            Toast.makeText(QuestionActivity.this, R.string.question_added, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
+
+    /**
+     * Invoked when the "Edit" app bar button is clicked. It starts {@link QuestionEditActivity}
+     * while passing the id of the currently displayed {@link Question} to it.
+     */
     private void editQuestion() {
-        // TODO: Edit question
+        if (mCurrentQuestionIndex >= 0) {
+            Intent intent = new Intent(this, QuestionEditActivity.class);
+            long questionId = mQuestionList.get(mCurrentQuestionIndex).getId();
+            intent.putExtra(QuestionEditActivity.EXTRA_QUESTION_ID, questionId);
+            mEditQuestionResultLauncher.launch(intent);
+        }
     }
 
+    /**
+     * {@link ActivityResultLauncher} used to specify what actions to take after
+     * {@link QuestionEditActivity} finishes when it is launched using {@link #editQuestion()}. It
+     * gets attributes of the updated {@link Question} from {@link #mStudyDb} and updates it in
+     * {@link #mQuestionList}.
+     */
+    private final ActivityResultLauncher<Intent> mEditQuestionResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            // Get updated question.
+                            long questionId = data.getLongExtra(QuestionEditActivity.EXTRA_QUESTION_ID, -1);
+                            Question updatedQuestion = mStudyDb.questionDao().getQuestion(questionId);
+
+                            // Replace current question in question list with updated question.
+                            Question currentQuestion = mQuestionList.get(mCurrentQuestionIndex);
+                            currentQuestion.setText(updatedQuestion.getText());
+                            currentQuestion.setAnswer(updatedQuestion.getAnswer());
+                            showQuestion(mCurrentQuestionIndex);
+
+                            Toast.makeText(QuestionActivity.this, R.string.question_updated, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            });
+
+    /**
+     * Invoked when the "Delete" app bar button is clicked. It deletes the currently displayed
+     * {@link Question} from {@link #mQuestionList} and {@link #mStudyDb}. However, it stores it
+     * at {@link #mDeletedQuestion} in case the user wants to undo this action via a
+     * {@link Snackbar} button click.
+     */
     private void deleteQuestion() {
-        // TODO: Delete question
+        if (mCurrentQuestionIndex >= 0) {
+            Question question = mQuestionList.get(mCurrentQuestionIndex);
+            mStudyDb.questionDao().deleteQuestion(question);
+            mQuestionList.remove(mCurrentQuestionIndex);
+
+            // Save question in case user wants to undo delete
+            mDeletedQuestion = question;
+
+            if (mQuestionList.isEmpty()) {
+                // No questions left to show
+                mCurrentQuestionIndex = -1;
+                updateAppBarTitle();
+                displayQuestion(false);
+            } else {
+                showQuestion(mCurrentQuestionIndex);
+            }
+
+            // Show delete message with Undo button
+            Snackbar snackbar = Snackbar.make(findViewById(R.id.coordinator_layout),
+                    R.string.question_deleted, Snackbar.LENGTH_LONG);
+            snackbar.setAction(R.string.undo, v -> {
+                // Add question back with a new auto-increment id
+                mDeletedQuestion.setId(0);
+                mStudyDb.questionDao().insertQuestion(mDeletedQuestion);
+
+                // Add question back to list of questions, and display it
+                mQuestionList.add(mDeletedQuestion);
+                showQuestion(mQuestionList.size() - 1);
+                displayQuestion(true);
+            });
+            snackbar.show();
+        }
     }
 
     /**

@@ -41,7 +41,13 @@ public class Question {
     private long mSubjectId;
 
     /**
-     * Constructs a new {@link Question}.
+     * Constructs a new {@link Question} with null attributes.
+     */
+    public Question() {
+    }
+
+    /**
+     * Constructs a new {@link Question} with the specified attributes.
      *
      * @param mText      {@link String} text for the question.
      * @param mAnswer    {@link String} answer to the question.
