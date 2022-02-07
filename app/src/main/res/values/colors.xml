@@ -11,6 +11,7 @@
     <color name="gray_400">#BBB</color>
     <color name="gray_500">#999</color>
     <color name="gray_700">#555</color>
+    <color name="ic_launcher_background">#0277BD</color>
 
     <!-- Subject colors. -->
     <array name="subjectColors">
