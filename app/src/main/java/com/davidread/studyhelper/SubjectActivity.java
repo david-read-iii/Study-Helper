@@ -2,11 +2,14 @@ package com.davidread.studyhelper;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.ActionMode;
@@ -68,8 +71,14 @@ public class SubjectActivity extends AppCompatActivity
     private ActionMode mActionMode = null;
 
     /**
+     * Reference to this app's {@link SharedPreferences}. General settings about the app can be
+     * retrieved from here.
+     */
+    private SharedPreferences mSharedPrefs;
+
+    /**
      * Callback method invoked when this activity is created. It initializes member variables and
-     * sets up {@link #mRecyclerView}.
+     * partially sets up {@link #mRecyclerView}.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,10 +88,61 @@ public class SubjectActivity extends AppCompatActivity
         mStudyDb = StudyDatabase.getInstance(getApplicationContext());
         mSubjectColors = getResources().getIntArray(R.array.subjectColors);
 
-        mSubjectAdapter = new SubjectAdapter(loadSubjects());
         mRecyclerView = findViewById(R.id.subject_recycler_view);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+
+        // Change the theme if preference is true.
+        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean darkTheme = mSharedPrefs.getBoolean("dark_theme", false);
+        if (darkTheme) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        }
+    }
+
+    /**
+     * Callback method invoked when this activity comes to the foreground. It initializes
+     * {@link #mRecyclerView} with a new {@link SubjectAdapter}.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Load subjects here in case settings changed.
+        mSubjectAdapter = new SubjectAdapter(loadSubjects());
         mRecyclerView.setAdapter(mSubjectAdapter);
+    }
+
+    /**
+     * Callback method invoked when this activity's app bar is created. It inflates the app bar's
+     * menu layout with a "Settings" action button.
+     *
+     * @param menu {@link Menu} in which you place your items.
+     * @return True for the menu to be displayed. False otherwise.
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.subject_menu, menu);
+        return true;
+    }
+
+    /**
+     * Callback method invoked when an action button in the app bar is clicked.
+     *
+     * @param item {@link MenuItem} invoking this hook.
+     * @return True if the click is handled here.
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        // If "Settings is clicked, start the SettingsActivity.
+        if (item.getItemId() == R.id.settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -121,10 +181,18 @@ public class SubjectActivity extends AppCompatActivity
     }
 
     /**
-     * Returns the {@link List} of {@link Subject} objects stored in {@link #mStudyDb}.
+     * Returns the {@link List} of {@link Subject} objects stored in {@link #mStudyDb}. Sort order
+     * is determined by this app's {@link SharedPreferences}.
      */
     private List<Subject> loadSubjects() {
-        return mStudyDb.subjectDao().getSubjectsNewerFirst();
+        String order = mSharedPrefs.getString("subject_order", "alpha");
+        if (order.equals("alpha")) {
+            return mStudyDb.subjectDao().getSubjects();
+        } else if (order.equals("new_first")) {
+            return mStudyDb.subjectDao().getSubjectsNewerFirst();
+        } else {
+            return mStudyDb.subjectDao().getSubjectsOlderFirst();
+        }
     }
 
     /**

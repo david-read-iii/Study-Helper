@@ -1,8 +1,10 @@
 package com.davidread.studyhelper;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -63,18 +65,25 @@ public class QuestionEditActivity extends AppCompatActivity {
 
         mStudyDb = StudyDatabase.getInstance(getApplicationContext());
 
-        // Get question ID from QuestionActivity
+        // Get question ID from QuestionActivity.
         Intent intent = getIntent();
         mQuestionId = intent.getLongExtra(EXTRA_QUESTION_ID, -1);
 
         if (mQuestionId == -1) {
-            // Add new question
+            // Add new question.
             mQuestion = new Question();
             long subjectId = intent.getLongExtra(EXTRA_SUBJECT_ID, 0);
             mQuestion.setSubjectId(subjectId);
+
+            // Load default question text.
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+            String defaultText = sharedPrefs.getString("default_question", "");
+            mQuestion.setText(defaultText);
+            mQuestionText.setText(defaultText);
+
             setTitle(R.string.add_question);
         } else {
-            // Update existing question
+            // Update existing question.
             mQuestion = mStudyDb.questionDao().getQuestion(mQuestionId);
             mQuestionText.setText(mQuestion.getText());
             mAnswerText.setText(mQuestion.getAnswer());
