@@ -17,7 +17,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -107,8 +106,6 @@ public class SubjectActivity extends AppCompatActivity
 
             // Add new Subject with id to RecyclerView.
             mSubjectAdapter.addSubject(subject);
-
-            Toast.makeText(this, "Added " + subjectText, Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -19,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
@@ -254,7 +254,7 @@ public class QuestionActivity extends AppCompatActivity {
                             // Change layout in case this is the first question.
                             displayQuestion(true);
 
-                            Toast.makeText(QuestionActivity.this, R.string.question_added, Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(R.id.coordinator_layout), R.string.question_added, BaseTransientBottomBar.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -297,7 +297,7 @@ public class QuestionActivity extends AppCompatActivity {
                             currentQuestion.setAnswer(updatedQuestion.getAnswer());
                             showQuestion(mCurrentQuestionIndex);
 
-                            Toast.makeText(QuestionActivity.this, R.string.question_updated, Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(R.id.coordinator_layout), R.string.question_updated, BaseTransientBottomBar.LENGTH_SHORT).show();
                         }
                     }
                 }
