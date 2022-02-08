@@ -91,11 +91,13 @@ public class SubjectActivity extends AppCompatActivity
         mRecyclerView = findViewById(R.id.subject_recycler_view);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
 
-        // Change the theme if preference is true.
+        // Set the light/dark theme based on value in SharedPreferences.
         mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean darkTheme = mSharedPrefs.getBoolean("dark_theme", false);
         if (darkTheme) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
     }
 
@@ -135,8 +137,15 @@ public class SubjectActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        // If "Settings is clicked, start the SettingsActivity.
-        if (item.getItemId() == R.id.settings) {
+        // If "Import" is clicked, start the ImportActivity.
+        if (item.getItemId() == R.id.import_questions) {
+            Intent intent = new Intent(this, ImportActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        // If "Settings" is clicked, start the SettingsActivity.
+        else if (item.getItemId() == R.id.settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
